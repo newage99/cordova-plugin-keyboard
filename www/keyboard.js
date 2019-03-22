@@ -21,10 +21,10 @@
 
 var argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils'),
+    channel = require('cordova/channel'),
     exec = require('cordova/exec');
-   
-var Keyboard = function() {
-};
+
+var Keyboard = function() {};
 
 Keyboard.shrinkView = function(shrink, success) {
     if (shrink !== null && shrink !== undefined) {
@@ -50,22 +50,22 @@ Keyboard.disableScrollingInShrinkView = function(disable, success) {
     }
 };
 
-Keyboard.fireOnShow = function() {
+Keyboard.fireOnShow = function(height) {
     Keyboard.isVisible = true;
-    cordova.fireWindowEvent('keyboardDidShow');
-
-    if(Keyboard.onshow) {
-	Keyboard.onshow();
-    }
+    cordova.fireWindowEvent('keyboardDidShow', {
+        'keyboardHeight': height
+    });
 };
 
 Keyboard.fireOnHide = function() {
     Keyboard.isVisible = false;
     cordova.fireWindowEvent('keyboardDidHide');
+};
 
-    if(Keyboard.onhide) {
-	Keyboard.onhide();
-    }
+Keyboard.fireOnShowing = function(height) {
+    cordova.fireWindowEvent('keyboardWillShow', {
+        'keyboardHeight': height
+    });
 };
 
 Keyboard.fireOnHiding = function() {
@@ -76,20 +76,7 @@ Keyboard.fireOnHiding = function() {
     if (Keyboard.automaticScrollToTopOnHiding) {
         document.body.scrollLeft = 0;
     }
-
     cordova.fireWindowEvent('keyboardWillHide');
-
-    if(Keyboard.onhiding) {
-	Keyboard.onhiding();
-    }
-};
-
-Keyboard.fireOnShowing = function() {
-    cordova.fireWindowEvent('keyboardWillShow');
-
-    if(Keyboard.onshowing) {
-	Keyboard.onshowing();
-    }
 };
 
 Keyboard.show = function() {
@@ -99,6 +86,23 @@ Keyboard.show = function() {
 Keyboard.hide = function() {
     exec(null, null, "Keyboard", "hide", []);
 };
+
+channel.onCordovaReady.subscribe(function () {
+    exec(success, null, 'Keyboard', 'init', []);
+
+    function success(msg) {
+        var action = msg.charAt(0);
+        if (action === 'S') {
+            var keyboardHeight = parseInt(msg.substr(1));
+            Keyboard.fireOnShowing(keyboardHeight);
+            Keyboard.fireOnShow(keyboardHeight);
+
+        } else if (action === 'H') {
+            Keyboard.fireOnHiding();
+            Keyboard.fireOnHide();
+        }
+    }
+});
 
 Keyboard.isVisible = false;
 Keyboard.automaticScrollToTopOnHiding = false;
