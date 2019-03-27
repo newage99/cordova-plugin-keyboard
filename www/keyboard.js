@@ -50,11 +50,18 @@ Keyboard.disableScrollingInShrinkView = function(disable, success) {
     }
 };
 
-Keyboard.fireOnShow = function(height) {
+getInfoToSendDict = function(info) {
+    let infoValues = info.split("|");
+    return {
+        'keyboardHeight': infoValues[0],
+        'screenHeight': infoValues.length > 1 ? infoValues[1] : 1,
+        'statusBarHeight': infoValues.length > 2 ? infoValues[2] : 1
+    };
+};
+
+Keyboard.fireOnShow = function(info) {
     Keyboard.isVisible = true;
-    cordova.fireWindowEvent('keyboardDidShow', {
-        'keyboardHeight': height
-    });
+    cordova.fireWindowEvent('keyboardDidShow', getInfoToSendDict(info));
 };
 
 Keyboard.fireOnHide = function() {
@@ -62,10 +69,8 @@ Keyboard.fireOnHide = function() {
     cordova.fireWindowEvent('keyboardDidHide');
 };
 
-Keyboard.fireOnShowing = function(height) {
-    cordova.fireWindowEvent('keyboardWillShow', {
-        'keyboardHeight': height
-    });
+Keyboard.fireOnShowing = function(info) {
+    cordova.fireWindowEvent('keyboardWillShow', getInfoToSendDict(info));
 };
 
 Keyboard.fireOnHiding = function() {
@@ -91,11 +96,11 @@ channel.onCordovaReady.subscribe(function () {
     exec(success, null, 'Keyboard', 'init', []);
 
     function success(msg) {
-        var action = msg.charAt(0);
+        let action = msg.charAt(0);
         if (action === 'S') {
-            var keyboardHeight = parseInt(msg.substr(1));
-            Keyboard.fireOnShowing(keyboardHeight);
-            Keyboard.fireOnShow(keyboardHeight);
+            let keyboardInfo = msg.substr(1);
+            Keyboard.fireOnShowing(keyboardInfo);
+            Keyboard.fireOnShow(keyboardInfo);
 
         } else if (action === 'H') {
             Keyboard.fireOnHiding();

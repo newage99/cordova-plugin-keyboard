@@ -76,17 +76,21 @@ public class Keyboard extends CordovaPlugin {
                             } else {
                                 screenHeight = rootViewHeight;
                             }
-                            int heightDiff = screenHeight - resultBottom;
-                            int pixelHeightDiff = (int)(heightDiff / density);
+                            int statusBarHeight = 1;
+                            try {
+                                statusBarHeight = cordova.getActivity().getResources().getDimensionPixelSize(
+                                    cordova.getActivity().getResources().getIdentifier("status_bar_height", "dimen", "android"));
+                            } catch (Exception e) {}
+                            int pixelHeightDiff = screenHeight - (r.bottom - r.top);
+                            //int pixelHeightDiff = rootViewHeight;
                             if (pixelHeightDiff > 100 && pixelHeightDiff != previousHeightDiff) { // if more than 100 pixels, its probably a keyboard...
-                                String msg = "S" + Integer.toString(pixelHeightDiff);
+                                String msg = "S" + Integer.toString(pixelHeightDiff) + "|" + Integer.toString(screenHeight) + "|" + Integer.toString(statusBarHeight);
                                 result = new PluginResult(PluginResult.Status.OK, msg);
                                 result.setKeepCallback(true);
                                 callbackContext.sendPluginResult(result);
                             }
                             else if (pixelHeightDiff != previousHeightDiff && (previousHeightDiff - pixelHeightDiff) > 100){
-                                String msg = "H";
-                                result = new PluginResult(PluginResult.Status.OK, msg);
+                                result = new PluginResult(PluginResult.Status.OK, "H");
                                 result.setKeepCallback(true);
                                 callbackContext.sendPluginResult(result);
                             }
